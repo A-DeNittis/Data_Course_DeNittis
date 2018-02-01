@@ -223,6 +223,8 @@ colsColny <- cols[dat2$Colony]
 plot(dat2$Headwidth, dat2$Mass, main = "Thatch Ant Headwidth vs Mass", xlab = "Headwidth (mm)", ylab = "Mass (unit)", col = colsColny, pch = 20)
 legend("topleft",legend = paste(rep(c("Colony"), times = 11), c(1:11)), col = cols, pch = 20)
 
+
+
 ## I know there is extra stuff that wasn't required for the task, but I found some 
 ## helpful things like the legend command and color packages, and figured it might be a good place to learn and apply. 
 

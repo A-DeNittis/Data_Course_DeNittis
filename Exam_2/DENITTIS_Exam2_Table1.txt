@@ -1,0 +1,7 @@
+                      Df   Sum Sq  Mean Sq F value Pr(>F)    
+Year                  11 56530303  5139118   947.9 <2e-16 ***
+Aerosol_Density        1 66315297 66315297 12232.3 <2e-16 ***
+Year:Aerosol_Density  11 16971225  1542839   284.6 <2e-16 ***
+Residuals            274  1485442     5421                   
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

@@ -119,4 +119,4 @@ print(masoil)
 print(marhiz)
 ```
 
-The genus most abundant for the soil sample is _Bacillales_, and the genus most abundant in rhizosphere sample is _Bacillus_. The vector is short, so I was able to pick out the genus just by looking. I spent a lot of time with different split and grep functions to separate the vector using ";" as the delimiter so that I could run a successful grep to pull out names with "g__". However, I couldn't get it to split right. 
+The genus most abundant for the soil sample is (possibly) _Bacillales_, and the genus most abundant in rhizosphere sample is (possibly) _Bacillus_.I spent a lot of time with different split and grep functions to separate the vector, but I couldn't get it right. 

@@ -1,0 +1,176 @@
+---
+title: "Assignment 8/9"
+author: "Alyson DeNittis"
+date: "April 26, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+___
+
+The data set we will use is called /data/mushroom_growth.csv. This was a fully-factorial experiment designed to find optimal temperatures for growing two species of mushrooms. I varied the levels of nitrogen (mg/g soil), light (hours per day),humidity (ambient vs high), and temperature (deg C). The response variable was growth rate (g/day).
+
+Submit an R script that imports and analyzes this data, include code for a predictive model and meaningful plots.Look for what factors best predict high mushroom growth rates and back up your figures with statistical signifigance tests.
+
+___
+
+*Load Packages*
+
+```{r warning=FALSE, message=FALSE}
+library(ggplot2)
+library(broom)
+library(fitdistrplus)
+library(tibble)
+library(modelr)
+library(gridExtra)
+```
+
+*Import Data* 
+
+```{r echo = FALSE}
+df = read.csv("C:/Users/Aly/Desktop/GIT/Data_Course_DeNittis/Assignments/mushroom_growth.csv")
+glimpse(df)
+```
+
+
+*Check Fit*
+
+Data is tested to see if it follows a normal distribution, and can be tested against other distributions. As shown by the following plots, it seems to fit a gamma distribution best. However, it adequately fits a normal distribution. 
+
+```{r}
+plot(fitdist(df$GrowthRate, distr = "norm"))
+plot(fitdist(df$GrowthRate, distr = "lnorm"))
+plot(fitdist(df$GrowthRate, distr = "logis"))
+plot(fitdist(df$GrowthRate, distr = "gamma"))
+```
+
+The following graph shows Nitrogen versus growth rate between high and low humidity. With a 95% confidence interval, there seems to be a difference between species at high humidity levels, but not in low levels. 
+
+```{r message=FALSE}
+ggplot(df, aes(x=Nitrogen, y=GrowthRate, col=Species))+
+  geom_point() +
+  stat_smooth()+
+  facet_grid(facets = ~Humidity)
+```
+
+This can also be seen between light and growth rate between low and high humidity levels. 
+
+```{r message=FALSE, warning=FALSE}
+ggplot(df, aes(x=Light, y=GrowthRate, col=Species))+
+  geom_point() +
+  stat_smooth()+
+  facet_grid(facets = ~Humidity)
+```
+
+There seems to be a difference in species at high humidity, but should be tested using ANOVA models.In the following code, variables are chosen arbitrarily, as the order of variables can produce somewhat different results and are subject to bias.There are several variables that interact with each other and are statistically different at a level of significance of at least 0.01.Nitrogen does not seem to be significant in affecting growth rate.
+
+```{r}
+mod1 = aov(GrowthRate ~ Light*Species*Humidity*Nitrogen*Temperature, data = df)
+summary(mod1)
+```
+
+The species are subset to analyze separately.
+
+```{r}
+pc = subset(df, Species == "P.cornucopiae")
+po = subset(df, Species == "P.ostreotus")
+```
+
+The following models show that light, humidity, and temperature all interact significantl for both species.
+
+```{r}
+pcmod2 = aov(GrowthRate ~ Light*Humidity, data = pc)
+pcmod3 = aov(GrowthRate ~ Light*Humidity*Temperature, data = pc)
+summary(pcmod2)
+summary(pcmod3)
+```
+
+```{r}
+pomod2 = aov(GrowthRate ~ Light*Humidity, data = po)
+pomod3 = aov(GrowthRate ~ Light*Humidity*Temperature, data = po)
+summary(pcmod2)
+summary(pcmod3)
+```
+
+Predictions can be evaluated for each of the models.
+
+```{r}
+pcmod2pred = add_predictions(pc, model = pcmod2)
+pcmod3pred = add_predictions(pc, model = pcmod3)
+pomod2pred = add_predictions(po, model = pomod2)
+pomod3pred = add_predictions(po, model = pomod3)
+```
+
+The mean for model 3 is lower than model 2, showing less variance and a better fit for P. cornucopiae. For P. ostreotus, model 2 is a better fit.
+
+```{r}
+mean((pcmod2pred$pred-pcmod2pred$GrowthRate)^2)
+mean((pcmod3pred$pred-pcmod3pred$GrowthRate)^2)
+
+mean((pomod2pred$pred-pomod2pred$GrowthRate)^2)
+mean((pomod3pred$pred-pomod3pred$GrowthRate)^2)
+```
+An ANOVA is run between the models, as well a Tukey test to determine the difference of means between groups.
+
+```{r}
+anova(pcmod2, pcmod3)
+anova(pomod2, pomod3)
+pcmod4 = aov(GrowthRate ~ factor(Light)*Humidity*factor(Temperature), data = pc)
+TukeyHSD(pcmod4)
+pomod4 = aov(GrowthRate ~ factor(Light)*Humidity*factor(Temperature), data = po)
+TukeyHSD(pomod4)
+```
+The results from the Tukey test can be reflected in the graphs below. From this we can see that light, temperature, and humidity impact growth.
+
+```{r message=FALSE, warning = FALSE}
+poplot1 = ggplot(po, aes(x=Light,y=GrowthRate,col=Humidity)) +
+  geom_point() +
+  stat_smooth() + 
+  theme_bw() + 
+  ggtitle("P.ostreotus")
+
+pcplot1 = ggplot(pc, aes(x=Light,y=GrowthRate,col=Humidity)) +
+  geom_point() +
+  stat_smooth() + 
+  theme_bw() + 
+  ggtitle("P.cornucopiae")
+
+poplot2 = ggplot(po, aes(x=Temperature,y=GrowthRate,col=Humidity)) +
+  geom_point() +
+  stat_smooth() + 
+  theme_bw() + 
+  ggtitle("P.ostreotus")
+
+pcplot2 = ggplot(pc, aes(x=Temperature,y=GrowthRate,col=Humidity)) +
+  geom_point() +
+  stat_smooth() + 
+  theme_bw() + 
+  ggtitle("P.cornucopiae")
+
+grid.arrange(poplot1,pcplot1, poplot2, pcplot2)
+```
+
+
+```{r message=FALSE, warning = FALSE}
+ggplot(pc, aes(x=Light, y=GrowthRate, col = Humidity, linetype = factor(Temperature)))+
+  geom_jitter(width = .7 )+
+  geom_point()+
+  labs(y="Growth Rate", title = "P. cornucopiae")+
+  scale_linetype_discrete(name = "Temperature (Degrees Celcius)")+
+  stat_smooth(method = "lm", se = FALSE)+
+  theme_bw()
+
+ggplot(po, aes(x=Light, y=GrowthRate, col = Humidity, linetype = factor(Temperature)))+
+  geom_jitter(width = .7 )+
+  geom_point()+
+  labs(y="Growth Rate", title = "P. ostreotus")+
+  scale_linetype_discrete(name = "Temperature (Degrees Celcius)")+
+  stat_smooth(method = "lm", se = FALSE)+
+  theme_bw()
+```
+
+
+
+
+

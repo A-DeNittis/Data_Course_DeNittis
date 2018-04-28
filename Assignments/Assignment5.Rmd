@@ -1,0 +1,33 @@
+---
+title: "Assignment5_Model"
+author: "Alyson DeNittis"
+date: "April 26, 2018"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+```{r}
+df = read.csv("C:/Users/Aly/Desktop/GIT/Data_Course_DeNittis/Assignments/mushroom_growth.csv")
+pc = subset(df, Species == "P.cornucopiae")
+po = subset(df, Species = "P. ostreotus")
+library(ggplot2)
+
+ggplot(pc, aes(x=Light, y=GrowthRate, col = Humidity, linetype = factor(Temperature)))+
+  geom_jitter(width = .7 )+
+  geom_point()+
+  labs(y="Growth Rate", title = "P. cornucopiae")+
+  scale_linetype_discrete(name = "Temperature (Degrees Celcius)")+
+  stat_smooth(method = "lm", se = FALSE)+
+  theme_bw()
+
+ggplot(po, aes(x=Light, y=GrowthRate, col = Humidity, linetype = factor(Temperature)))+
+  geom_jitter(width = .7 )+
+  geom_point()+
+  labs(y="Growth Rate", title = "P. ostreotus")+
+  scale_linetype_discrete(name = "Temperature (Degrees Celcius)")+
+  stat_smooth(method = "lm", se = FALSE)+
+  theme_bw()
+```

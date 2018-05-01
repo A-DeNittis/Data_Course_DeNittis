@@ -155,19 +155,20 @@ meanvec = group_by(ndsub, Age_wk) %>%
   )
 
 ggplot(meanvec, aes(x=Age_wk, y=mean))+
-  geom_line() +ylab("Mean Area (cm^2)")+xlab("Age (weeks)") + theme_bw()
+  geom_line() + geom_point()+ylab("Mean Area (cm^2)")+xlab("Age (weeks)") + theme_bw()
 ```
 
-This can be visualized better by plotting growth rate calculated by dividing each mean by the previous observation mean. A value of 1.0 indicates no growth. Values < 1.0 represent a decrease in size, while values > 1.0 represent an increase in size. While a value over 1.0 indicates an increase in size following subculture, a decrease in the interval indicates that there was less overall growth compared to the previous week. This can possibly help determine at what points growth increases the most, or at what point growth stabilizes.
+This can be visualized better by plotting growth rate calculated by dividing each mean by the previous observation mean, and calculating its distance from 0. A value of 0 indicates no growth from the previous observation. Values < 0 represent a decrease in size, while values > 0 represent an increase in size. Growth rate increase at 5 weeks correlates with the plantlets  following subculture, a decrease in the interval indicates that there was less overall growth compared to the previous week. This can possibly help determine at what points growth increases the most, or at what point growth stabilizes.
 
 ```{r echo=FALSE}
 grvec = c(1,1.84,1.51,1.63,.966,1.51,1.15,1.37,1.08,1.02,1.02,0.892)
-meanvec = bind_cols(meanvec,gr=grvec)
+plgrvec =c(0,.84,.51,.63,-.34,.51,.15,.37,.08,.02,.02,-.108) 
+meanvec = bind_cols(meanvec,plgr=plgrvec)
 
-ggplot(meanvec, aes(x=Age_wk, y=gr))+
-  geom_line() + 
+ggplot(meanvec, aes(x=Age_wk, y=plgrvec))+
+  geom_col(width = .4) +
   theme_bw() + 
-  geom_hline(aes(yintercept = 1.0)) + ylab("Growth Rate") + xlab("Age (Weeks)")
+  geom_hline(aes(yintercept = 0)) +ylab("Growth Rate") + xlab("Age (Weeks)") 
 ```
 
 **Time Series Analysis**
@@ -188,13 +189,15 @@ idx = as.Date(c("2017-12-28","2018-01-04","2018-01-11","2018-01-18","2018-01-25"
 matx = xts(tsmat, order.by = idx)
 ```
 
-**ARIMA Modeling (Failures)**
+**ARIMA Modeling**
 
-The goal of this project was to apply ARIMA modeling to the dataset. However, I was not able to successfully execute it with my data for this project. Assuming it was an issue with my experimental data, I created a new data set modeled off the experimental data for a clean data set. However, this did not solve the issue. I assume the issue lies in my coding or poor understanding of the concepts. Instead of going through the modeling process with my data, I will go through some of the basic methodology with a preloaded data set. The benefit for ARIMA modeling with my data is real time analysis and forecasting for expected plant growth based on general trends, or cycles in which the mean of my univariate data increases and decreases. This could be particularly useful for determining the ideal times to subculture plantlets to maintain as high of vigor as possible. Since this study focuses primarily on establishing a protocol for mass producing plantlets, determining these critical points in the tissue culture process could produce a more informed protocol.   
+The goal of this project was to apply ARIMA modeling to the dataset. However, I was not able to successfully execute it with my data for this project. Assuming it was an issue with my experimental data, I created a new data set modeled off the experimental data for a clean data set. This did not solve the issue. I assume the issue lies in my coding or poor understanding of the concepts. The benefit for ARIMA modeling with my data is real time analysis and forecasting for expected plant growth based on general trends, or cycles in which the mean of my growth data increases and decreases. This could be particularly useful for determining the ideal times to subculture plantlets to maintain as high of vigor as possible. Since this study focuses primarily on establishing a protocol for mass producing plantlets, determining these critical points in the tissue culture process could produce a more informed protocol.   
+
+Since I was unable to execute this model with my data, I will go through some of the basic methodology with a preloaded data set.
 
 *Methodology*
 
-Although there are many types of models, I will be doing an ARIMA forecast using the AirPassenger time series data. Here, we can see the time series data and plot.We can fit a line to the data to show the upward trend of the mean.
+Although there are many types of models, I will be doing an ARIMA forecast using the AirPassenger time series data. Here, we can see the time series data and plot. We can fit a line to the data to show the upward trend of the mean.
 ```{r}
 AirPassengers
 plot(AirPassengers)+
@@ -225,7 +228,7 @@ pred = predict(fit, n.ahead = 10*12)
 pred1 = 2.178^pred$pred
 pred1
 ```
-Based on the parameters established in the prediction, the new data set now has predictive values for 10 years. For my data, this would be a significantly smaller time scale, which is established in the n.ahead function. THe time series can also be plotted, with the dash line now indicating predicted values based on the model. 
+Based on the parameters established in the prediction, the new data set now has predictive values for 10 years. For my data, this would be a significantly smaller time scale, which is established in the n.ahead function. The time series can also be plotted, with the dash line now indicating predicted values based on the model. 
 ```{r}
 ts.plot(AirPassengers,2.718^pred$pred, log = "y", lty = c(1,3))
 ```
